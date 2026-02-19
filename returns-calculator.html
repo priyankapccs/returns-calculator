@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UK Fashion Returns Cost Calculator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --cream: #f5f0e8;
+  --warm-white: #faf8f4;
+  --ink: #1a1612;
+  --ink-dim: #5a5248;
+  --ink-faint: #9a9088;
+  --rust: #c4522a;
+  --rust-light: rgba(196, 82, 42, 0.1);
+  --rust-glow: rgba(196, 82, 42, 0.2);
+  --gold: #b8922a;
+  --gold-light: rgba(184, 146, 42, 0.12);
+  --border: rgba(26, 22, 18, 0.12);
+  --border-strong: rgba(26, 22, 18, 0.25);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--warm-white);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-weight: 300;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Grain texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.6;
+}
+
+/* Decorative border lines */
+.page-frame {
+  position: fixed;
+  inset: 20px;
+  border: 1px solid var(--border);
+  pointer-events: none;
+  z-index: 5;
+}
+.page-frame::before, .page-frame::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--border);
+}
+.page-frame::after { inset: 3px; border-color: rgba(26,22,18,0.05); }
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 48px 80px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 56px;
+  animation: fadeIn 0.8s ease both;
+}
+
+.masthead {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.masthead::before, .masthead::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--rust);
+  opacity: 0.4;
+}
+
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--ink);
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--rust);
+}
+
+.header-sub {
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 40px 0;
+}
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+.divider-ornament {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: var(--gold);
+  opacity: 0.6;
+}
+
+/* Inputs section */
+.inputs-section {
+  animation: fadeIn 0.8s 0.1s ease both;
+}
+
+.input-group {
+  margin-bottom: 28px;
+}
+
+.input-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.label-text {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.label-hint {
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+
+.input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background: var(--cream);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-row:focus-within {
+  border-color: var(--rust);
+  box-shadow: 0 0 0 3px var(--rust-light);
+}
+
+.input-prefix {
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--ink-faint);
+  border-right: 1px solid var(--border);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+input[type="number"], input[type="range"] {
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  font-family: 'DM Mono', monospace;
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--ink);
+  padding: 0 16px;
+  height: 48px;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button { display: none; }
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  width: 100%;
+  height: 48px;
+}
+
+input[type="range"] {
+  height: auto;
+  padding: 0;
+  accent-color: var(--rust);
+  flex: 1;
+}
+
+.slider-value {
+  font-size: 15px;
+  color: var(--ink);
+  min-width: 36px;
+  text-align: right;
+  font-weight: 400;
+}
+
+/* Two column grid for smaller inputs */
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Results panel */
+.results {
+  background: var(--ink);
+  border-radius: 2px;
+  padding: 40px;
+  margin: 40px 0;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.8s 0.2s ease both;
+}
+
+.results::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--rust), var(--gold), var(--rust));
+}
+
+.results-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 28px;
+  opacity: 0.8;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 36px;
+}
+
+.result-item { }
+
+.result-label {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.4);
+  margin-bottom: 8px;
+}
+
+.result-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.8rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+  transition: all 0.4s ease;
+}
+
+.result-value.highlight {
+  color: var(--rust);
+  font-size: 3.4rem;
+}
+
+.result-sub {
+  font-size: 10px;
+  color: rgba(245, 240, 232, 0.35);
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+}
+
+/* Sizing breakdown */
+.sizing-breakdown {
+  border-top: 1px solid rgba(245, 240, 232, 0.1);
+  padding-top: 28px;
+}
+
+.sizing-breakdown-title {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.35);
+  margin-bottom: 16px;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.bar-label {
+  font-size: 10px;
+  color: rgba(245, 240, 232, 0.5);
+  width: 110px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.bar-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(245, 240, 232, 0.08);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bar-amount {
+  font-size: 11px;
+  color: rgba(245, 240, 232, 0.6);
+  min-width: 60px;
+  text-align: right;
+  font-weight: 400;
+}
+
+/* Potential savings */
+.savings-box {
+  background: var(--rust-light);
+  border: 1px solid var(--rust-glow);
+  border-radius: 2px;
+  padding: 28px 32px;
+  margin: 0 0 40px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 24px;
+  animation: fadeIn 0.8s 0.3s ease both;
+}
+
+.savings-text {}
+.savings-text p {
+  font-size: 11px;
+  color: var(--ink-dim);
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+}
+.savings-text p strong { color: var(--ink); font-weight: 500; }
+
+.savings-number {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.savings-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--rust);
+  line-height: 1;
+  display: block;
+  white-space: nowrap;
+}
+
+.savings-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--rust);
+  opacity: 0.7;
+  margin-top: 4px;
+  display: block;
+  text-align: right;
+}
+
+/* Industry benchmarks */
+.benchmarks {
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 24px 28px;
+  margin-bottom: 40px;
+  background: var(--cream);
+  animation: fadeIn 0.8s 0.35s ease both;
+}
+
+.bench-title {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+}
+
+.bench-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bench-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--ink-dim);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bench-item:last-child { border-bottom: none; padding-bottom: 0; }
+.bench-stat { color: var(--rust); font-weight: 500; }
+
+/* CTA */
+.cta {
+  text-align: center;
+  padding: 40px 32px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  animation: fadeIn 0.8s 0.4s ease both;
+}
+
+.cta-serif {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.cta-serif em { font-style: italic; color: var(--rust); }
+
+.cta-sub {
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--rust);
+  color: var(--cream);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.cta-button:hover {
+  background: #a8421e;
+  transform: translateY(-1px);
+}
+
+.cta-byline {
+  font-size: 9px;
+  color: var(--ink-faint);
+  margin-top: 14px;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+/* Footer brand */
+.footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 48px;
+  opacity: 0.4;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.footer-brand::before, .footer-brand::after {
+  content: '';
+  width: 30px;
+  height: 1px;
+  background: currentColor;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 580px) {
+  .container { padding: 48px 24px 60px; }
+  .input-grid { grid-template-columns: 1fr; }
+  .results-grid { grid-template-columns: 1fr; gap: 24px; }
+  .savings-box { grid-template-columns: 1fr; }
+  .savings-number { text-align: left; }
+  .result-value { font-size: 2.2rem; }
+  .result-value.highlight { font-size: 2.8rem; }
+  .page-frame { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-frame"></div>
+
+<div class="container">
+
+  <div class="header">
+    <div class="masthead">Free Industry Tool</div>
+    <h1>What Are Your<br>Returns Actually <em>Costing</em> You?</h1>
+    <p class="header-sub">Enter your brand's numbers below. Discover your true annual return cost — and how much of it is driven by sizing alone.</p>
+  </div>
+
+  <div class="divider"><div class="divider-line"></div><div class="divider-ornament">✦</div><div class="divider-line"></div></div>
+
+  <div class="inputs-section">
+
+    <div class="input-group">
+      <div class="input-label">
+        <span class="label-text">Annual Online Revenue</span>
+        <span class="label-hint">Your total e-commerce turnover</span>
+      </div>
+      <div class="input-row">
+        <div class="input-prefix">£</div>
+        <input type="number" id="revenue" value="500000" min="10000" max="50000000" step="10000" oninput="calculate()">
+      </div>
+    </div>
+
+    <div class="input-grid">
+      <div class="input-group">
+        <div class="input-label">
+          <span class="label-text">Return Rate</span>
+          <span class="label-hint">UK avg: 25–35%</span>
+        </div>
+        <div class="input-row">
+          <div class="slider-container">
+            <input type="range" id="return-rate" min="5" max="60" value="30" step="1" oninput="syncSlider('return-rate','return-rate-val','%'); calculate()">
+            <span class="slider-value" id="return-rate-val">30%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          <span class="label-text">Avg Order Value</span>
+          <span class="label-hint">Per transaction</span>
+        </div>
+        <div class="input-row">
+          <div class="input-prefix">£</div>
+          <input type="number" id="aov" value="65" min="10" max="500" step="5" oninput="calculate()">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          <span class="label-text">Return Processing Cost</span>
+          <span class="label-hint">Per item (avg £8–15)</span>
+        </div>
+        <div class="input-row">
+          <div class="input-prefix">£</div>
+          <input type="number" id="processing-cost" value="10" min="2" max="40" step="1" oninput="calculate()">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <div class="input-label">
+          <span class="label-text">Product Category</span>
+        </div>
+        <div class="input-row" style="border: 1px solid var(--border-strong); border-radius: 2px; background: var(--cream);">
+          <select id="category" onchange="calculate()" style="font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 300; color: var(--ink); background: transparent; border: none; outline: none; width: 100%; height: 48px; padding: 0 16px; cursor: pointer; appearance: none; -webkit-appearance: none;">
+            <option value="0.72">Swimwear / Lingerie</option>
+            <option value="0.70" selected>Activewear / Bodysuits</option>
+            <option value="0.65">Dresses / Jumpsuits</option>
+            <option value="0.60">Tops / Knitwear</option>
+            <option value="0.55">Trousers / Skirts</option>
+            <option value="0.45">Accessories</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"><div class="divider-line"></div><div class="divider-ornament">✦</div><div class="divider-line"></div></div>
+
+  <!-- Results -->
+  <div class="results">
+    <div class="results-eyebrow">Your Annual Returns Analysis</div>
+    <div class="results-grid">
+      <div class="result-item">
+        <div class="result-label">Total Returns Cost</div>
+        <div class="result-value highlight" id="total-cost">£0</div>
+        <div class="result-sub">Revenue lost to returns annually</div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">Items Returned / Year</div>
+        <div class="result-value" id="items-returned">0</div>
+        <div class="result-sub">Physical items processed</div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">Sizing-Driven Returns</div>
+        <div class="result-value" id="sizing-cost">£0</div>
+        <div class="result-sub">70% of returns are size-related</div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">Effective Margin Lost</div>
+        <div class="result-value" id="margin-lost">0%</div>
+        <div class="result-sub">Of total revenue consumed</div>
+      </div>
+    </div>
+
+    <div class="sizing-breakdown">
+      <div class="sizing-breakdown-title">Where Sizing Returns Come From</div>
+      <div class="bar-row">
+        <div class="bar-label">Too small</div>
+        <div class="bar-track"><div class="bar-fill" id="bar-small" style="width:0%;background:#c4522a"></div></div>
+        <div class="bar-amount" id="amt-small">—</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Too large</div>
+        <div class="bar-track"><div class="bar-fill" id="bar-large" style="width:0%;background:#b8922a"></div></div>
+        <div class="bar-amount" id="amt-large">—</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Fit / cut issues</div>
+        <div class="bar-track"><div class="bar-fill" id="bar-fit" style="width:0%;background:#7a6a3a"></div></div>
+        <div class="bar-amount" id="amt-fit">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Potential Savings -->
+  <div class="savings-box">
+    <div class="savings-text">
+      <p><strong>If AI sizing recommendations reduced your sizing returns by 40%,</strong> your brand would recover an estimated:</p>
+      <p style="margin-top:8px; font-size:10px; opacity:0.75">Based on verified pilot data from a comparable UK fashion brand. A 40% reduction in sizing returns is a conservative baseline.</p>
+    </div>
+    <div class="savings-number">
+      <span class="savings-amount" id="potential-saving">£0</span>
+      <span class="savings-label">Recoverable / year</span>
+    </div>
+  </div>
+
+  <!-- Industry benchmarks -->
+  <div class="benchmarks">
+    <div class="bench-title">UK Fashion Industry Benchmarks</div>
+    <div class="bench-list">
+      <div class="bench-item"><span>Total UK returns market annually</span><span class="bench-stat">£7 billion</span></div>
+      <div class="bench-item"><span>Returns driven by sizing issues</span><span class="bench-stat">70%</span></div>
+      <div class="bench-item"><span>Average UK fashion return rate</span><span class="bench-stat">25–35%</span></div>
+      <div class="bench-item"><span>Return rate in fitted categories (swimwear, lingerie)</span><span class="bench-stat">40–60%</span></div>
+      <div class="bench-item"><span>Average processing cost per returned item</span><span class="bench-stat">£8–15</span></div>
+      <div class="bench-item"><span>Brands offering AI sizing — current UK adoption</span><span class="bench-stat">&lt;5%</span></div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <div class="cta-serif">Ready to see what <em>your</em> brand could recover?</div>
+    <p class="cta-sub">SizeSutra's AI sizing technology captures accurate body measurements<br>in under 30 seconds — no manual input, no measuring tape.</p>
+    <a href="mailto:hello@sizesutra.com?subject=Returns Calculator — I'd like a free Sizing Audit&body=Hi, I used the Returns Calculator and would like to discuss a free sizing audit for my brand." class="cta-button">
+      ✦ Book a Free Sizing Audit
+    </a>
+    <p class="cta-byline">No commitment · 15 minutes · Personalised to your brand</p>
+  </div>
+
+  <div class="footer-brand">SizeSutra</div>
+
+</div>
+
+<script>
+function fmt(n) {
+  if (n >= 1000000) return '£' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '£' + Math.round(n / 1000) + 'K';
+  return '£' + Math.round(n);
+}
+
+function fmtNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (Math.round(n / 1000)) + 'K';
+  return Math.round(n).toLocaleString();
+}
+
+function syncSlider(id, valId, suffix) {
+  document.getElementById(valId).textContent = document.getElementById(id).value + suffix;
+}
+
+function animateTo(el, target, formatter, duration = 500) {
+  const start = performance.now();
+  const from = parseFloat(el.dataset.current || '0');
+  el.dataset.current = target;
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const val = from + (target - from) * ease;
+    el.textContent = formatter(val);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function calculate() {
+  const revenue = parseFloat(document.getElementById('revenue').value) || 0;
+  const returnRate = parseFloat(document.getElementById('return-rate').value) / 100;
+  const aov = parseFloat(document.getElementById('aov').value) || 0;
+  const processingCost = parseFloat(document.getElementById('processing-cost').value) || 0;
+  const sizingFraction = parseFloat(document.getElementById('category').value);
+
+  const totalOrders = revenue / aov;
+  const returnedOrders = totalOrders * returnRate;
+  const totalReturnCost = returnedOrders * (aov + processingCost) * returnRate;
+  const lostRevenue = revenue * returnRate;
+  const processingTotal = returnedOrders * processingCost;
+  const totalCost = lostRevenue + processingTotal;
+  const sizingCost = totalCost * 0.70;
+  const marginLost = (totalCost / revenue * 100);
+  const potentialSaving = sizingCost * 0.40;
+
+  // Sizing breakdown (% of sizing returns)
+  const sizeSmall = sizingCost * 0.38; // 38% too small
+  const sizeLarge = sizingCost * 0.35; // 35% too large
+  const sizeFit   = sizingCost * 0.27; // 27% fit/cut
+
+  const maxBar = sizingCost;
+
+  // Animate values
+  animateTo(document.getElementById('total-cost'), totalCost, fmt);
+  animateTo(document.getElementById('items-returned'), returnedOrders, fmtNum);
+  animateTo(document.getElementById('sizing-cost'), sizingCost, fmt);
+  animateTo(document.getElementById('margin-lost'), marginLost, v => v.toFixed(1) + '%');
+  animateTo(document.getElementById('potential-saving'), potentialSaving, fmt);
+
+  // Bars
+  setTimeout(() => {
+    document.getElementById('bar-small').style.width = (sizeSmall / maxBar * 100) + '%';
+    document.getElementById('bar-large').style.width = (sizeLarge / maxBar * 100) + '%';
+    document.getElementById('bar-fit').style.width   = (sizeFit   / maxBar * 100) + '%';
+    document.getElementById('amt-small').textContent = fmt(sizeSmall);
+    document.getElementById('amt-large').textContent = fmt(sizeLarge);
+    document.getElementById('amt-fit').textContent   = fmt(sizeFit);
+  }, 50);
+}
+
+// Init
+calculate();
+</script>
+</body>
+</html>
